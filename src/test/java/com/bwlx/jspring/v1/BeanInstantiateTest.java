@@ -2,7 +2,7 @@ package com.bwlx.jspring.v1;
 
 
 import com.bwlx.jspring.BeanDefinition;
-import com.bwlx.jspring.IocContainer;
+import com.bwlx.jspring.XmlBeanFactory;
 import com.bwlx.jspring.v1.dao.AccountDao;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,7 +12,7 @@ public class BeanInstantiateTest {
 
     @Test
     public void test() throws Exception {
-        IocContainer iocContainer = new IocContainer("petstore-v1.xml");
+        XmlBeanFactory iocContainer = new XmlBeanFactory("petstore-v1.xml");
 
         BeanDefinition bd = iocContainer.getBeanDefinition("petStore");
 
