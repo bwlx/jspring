@@ -13,17 +13,19 @@ import java.lang.reflect.Field;
  * @author johan
  * @date 2020/9/22 22:09.
  */
-public class AnnotationBeanFactory extends AbstractBeanFactory {
+public class AnnotationBeanDefinitionLoader {
+  private XmlBeanFactory xmlBeanFactory;
 
-  public AnnotationBeanFactory(String packageName) {
-    this.load(packageName);
+  public AnnotationBeanDefinitionLoader(XmlBeanFactory xmlBeanFactory) {
+    this.xmlBeanFactory = xmlBeanFactory;
+    this.load(xmlBeanFactory.getPackageName());
   }
 
   private void load(String packageName) {
     try {
-      String path = Thread.currentThread().getContextClassLoader().getResource("/").getPath();
+      String path = Thread.currentThread().getContextClassLoader().getResource("").getPath();
       ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      File dir = new File(path + File.pathSeparator + packageName.replace(".", File.pathSeparator));
+      File dir = new File(path + File.separator + packageName.replace(".", File.separator));
       for (File file : dir.listFiles()) {
         if (file.isFile()) {
           String fileName = file.getName();
@@ -44,7 +46,7 @@ public class AnnotationBeanFactory extends AbstractBeanFactory {
                 bd.addProperty(new Property(f.getName(), null, Util.uncapitalize(f.getType().getSimpleName())));
               }
             }
-            beanDefinitionMap.put(Util.uncapitalize(className), bd);
+            xmlBeanFactory.getBeanDefinitionMap().put(Util.uncapitalize(className), bd);
           }
         }
       }

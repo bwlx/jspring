@@ -6,7 +6,7 @@ import java.util.List;
 public class BeanDefinition {
   private String id;
   private String beanClassName;
-  private List<Property> props = new ArrayList<>();
+  private List<Property> props = new ArrayList<Property>();
 
   public BeanDefinition(String id, String beanClassName) {
     this.id = id;

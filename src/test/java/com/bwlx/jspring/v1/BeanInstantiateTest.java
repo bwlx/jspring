@@ -3,10 +3,8 @@ package com.bwlx.jspring.v1;
 
 import com.bwlx.jspring.BeanDefinition;
 import com.bwlx.jspring.XmlBeanFactory;
-import com.bwlx.jspring.v1.dao.AccountDao;
 import org.junit.Assert;
 import org.junit.Test;
-import com.bwlx.jspring.v1.service.PetStoreService;
 
 public class BeanInstantiateTest {
 
@@ -16,7 +14,7 @@ public class BeanInstantiateTest {
 
         BeanDefinition bd = iocContainer.getBeanDefinition("petStore");
 
-        Assert.assertEquals("com.bwlx.jspring.v1.service.PetStoreService", bd.getBeanClassName());
+        Assert.assertEquals("com.bwlx.jspring.v1.PetStoreService", bd.getBeanClassName());
 
         PetStoreService petStore = (PetStoreService) iocContainer.getBean("petStore");
 

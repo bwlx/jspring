@@ -1,6 +1,6 @@
-package com.bwlx.jspring.v1.service;
+package com.bwlx.jspring.v1;
 
-import com.bwlx.jspring.v1.dao.AccountDao;
+import com.bwlx.jspring.v1.AccountDao;
 
 public class PetStoreService {
   AccountDao account;
