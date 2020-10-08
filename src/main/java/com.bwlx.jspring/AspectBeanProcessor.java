@@ -1,5 +1,9 @@
 package com.bwlx.jspring;
 
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -44,8 +48,14 @@ public class AspectBeanProcessor extends AbstractBeanProcessor {
       if (pointcut.equals(klass.getName())) {
         Map<String, List<Advice>> aspect2Advice = pointcut2Aspect.get(pointcut);
         Object object = this.getXmlBeanFactory().getBean2ObjectMap().get(beanId);
-        ProxyHandler proxyHandler = new ProxyHandler(object, aspect2Advice);
-        Object proxy = Proxy.newProxyInstance(klass.getClassLoader(), klass.getInterfaces(), proxyHandler);
+// JdkProxy
+//        ProxyHandler proxyHandler = new ProxyHandler(object, aspect2Advice);
+//        Object proxy = Proxy.newProxyInstance(klass.getClassLoader(), klass.getInterfaces(), proxyHandler);
+// cglibProxy
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(object.getClass());
+        enhancer.setCallback(new CglibInterceptor(object, aspect2Advice));
+        Object proxy = enhancer.create();
         this.getXmlBeanFactory().getBean2ObjectMap().put(beanId, proxy);
       }
     }
@@ -70,12 +80,38 @@ public class AspectBeanProcessor extends AbstractBeanProcessor {
         Object aspectObject = AspectBeanProcessor.this.getXmlBeanFactory().getBean(ref);
         for (Advice advice : aspect2Advice.get(ref)) {
           if (advice instanceof BeforeAdvice) {
-            Method m = aspectObject.getClass().getDeclaredMethod(advice.getMethod(), null);
-            m.invoke(aspectObject, null);
+            Method m = aspectObject.getClass().getDeclaredMethod(advice.getMethod(), Method.class, Object.class,
+                Object[].class);
+            m.invoke(aspectObject, method, object, args);
           }
         }
       }
       return method.invoke(object, args);
+    }
+  }
+
+  public class CglibInterceptor implements MethodInterceptor {
+    private Object object;
+    private Map<String, List<Advice>> aspect2Advice;
+
+    public CglibInterceptor(Object object, Map<String, List<Advice>> aspect2Advice) {
+      this.object = object;
+      this.aspect2Advice = aspect2Advice;
+    }
+
+    @Override
+    public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+      for (String ref : aspect2Advice.keySet()) {
+        Object aspectObject = AspectBeanProcessor.this.getXmlBeanFactory().getBean(ref);
+        for (Advice advice : aspect2Advice.get(ref)) {
+          if (advice instanceof BeforeAdvice) {
+            Method m = aspectObject.getClass().getDeclaredMethod(advice.getMethod(), Method.class, Object.class,
+                Object[].class);
+            m.invoke(aspectObject, method, object, args);
+          }
+        }
+      }
+      return methodProxy.invokeSuper(proxy, args);
     }
   }
 }

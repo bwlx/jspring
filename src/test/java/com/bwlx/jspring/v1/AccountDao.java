@@ -17,7 +17,8 @@ public class AccountDao implements AbstractDao {
   }
 
   @Override
-  public void printName() {
+  public void printName(String[] args) {
     System.out.println(name);
+    System.out.println(args);
   }
 }

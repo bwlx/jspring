@@ -7,5 +7,5 @@ package com.bwlx.jspring.v1;
  * @date 2020/10/8 10:05.
  */
 public interface AbstractDao {
-  void printName();
+  void printName(String[] args);
 }

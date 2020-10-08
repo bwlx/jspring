@@ -21,6 +21,6 @@ public class BeanInstantiateTest {
 
         AbstractDao accountDao = (AbstractDao) iocContainer.getBean("accountDao");
         Assert.assertNotNull(accountDao);
-        accountDao.printName();
+        accountDao.printName(new String[] { "a", "b"});
     }
 }
