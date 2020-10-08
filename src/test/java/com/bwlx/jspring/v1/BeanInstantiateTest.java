@@ -1,6 +1,5 @@
 package com.bwlx.jspring.v1;
 
-
 import com.bwlx.jspring.BeanDefinition;
 import com.bwlx.jspring.XmlBeanFactory;
 import org.junit.Assert;
@@ -20,7 +19,8 @@ public class BeanInstantiateTest {
 
         Assert.assertNotNull(petStore);
 
-        AccountDao accountDao = (AccountDao) iocContainer.getBean("accountDao");
+        AbstractDao accountDao = (AbstractDao) iocContainer.getBean("accountDao");
         Assert.assertNotNull(accountDao);
+        accountDao.printName();
     }
 }

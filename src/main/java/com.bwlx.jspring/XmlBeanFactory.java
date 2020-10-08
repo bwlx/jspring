@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +23,13 @@ public class XmlBeanFactory implements BeanFactory {
   final private Map<String, Class> bean2ClassMap = new ConcurrentHashMap<String, Class>();
   final private Map<String, Object> bean2ObjectMap = new ConcurrentHashMap<String, Object>();
   private String packageName;
+  private List<Aspect> aspects = new ArrayList<Aspect>();
+  private List<BeanProcessor> beanProcessors = new ArrayList<BeanProcessor>();
 
   public XmlBeanFactory(String configFile) {
     loadBeanDefinitions(configFile);
+    this.beanProcessors.add(new InitializingBeanProcessor(this));
+    this.beanProcessors.add(new AspectBeanProcessor(this));
   }
 
   public String getPackageName() {
@@ -47,6 +52,10 @@ public class XmlBeanFactory implements BeanFactory {
     return bean2ObjectMap;
   }
 
+  public List<Aspect> getAspects() {
+    return aspects;
+  }
+
   private void loadBeanDefinitions(String configFile) {
     InputStream is = null;
     try {
@@ -64,6 +73,20 @@ public class XmlBeanFactory implements BeanFactory {
         if ("component-scan".equals(ele.getName())) {
           this.packageName = ele.attributeValue("base-package");
           new AnnotationBeanDefinitionLoader(this);
+        }
+        if ("aspect".equals(ele.getName())) {
+          String ref = ele.attributeValue("ref");
+          Iterator adviceIter = ele.elementIterator();
+          List<Advice> advices = new ArrayList<Advice>();
+          while (adviceIter.hasNext()) {
+            Element innerEle = (Element) adviceIter.next();
+            if ("before".equals(innerEle.getName())) {
+              String pointcut = innerEle.attributeValue("pointcut");
+              String method = innerEle.attributeValue("method");
+              advices.add(new BeforeAdvice(pointcut, method));
+            }
+          }
+          this.aspects.add(new Aspect(ref, advices));
         }
         if ("bean".equals(ele.getName())) {
           String id = ele.attributeValue("id");
@@ -113,26 +136,27 @@ public class XmlBeanFactory implements BeanFactory {
       obj = bean2ObjectMap.get(beanId);
       if (obj == null) {
         obj = klass.newInstance();
-      } else {
-        return obj;
+        List<Property> props = beanDefinition.getProps();
+        for (Property p : props) {
+          String propertyName = p.getName();
+          Field field = klass.getDeclaredField(propertyName);
+          String methodName = Util.getSetMethodName(propertyName);
+          Method method = klass.getDeclaredMethod(methodName, field.getType());
+          if (p.getValue() != null) {
+            method.invoke(obj, p.getValue());
+          }
+          // ref 覆盖 value
+          if (p.getRef() != null) {
+            Object refObj = this.getBean(p.getRef());
+            method.invoke(obj, refObj);
+          }
+        }
+        bean2ObjectMap.put(beanId, obj);
+        for (BeanProcessor beanProcessor : beanProcessors) {
+          beanProcessor.process(beanId);
+        }
       }
     }
-    List<Property> props = beanDefinition.getProps();
-    for (Property p : props) {
-      String propertyName = p.getName();
-      Field field = klass.getDeclaredField(propertyName);
-      String methodName = Util.getSetMethodName(propertyName);
-      Method method = klass.getDeclaredMethod(methodName, field.getType());
-      if (p.getValue() != null) {
-        method.invoke(obj, p.getValue());
-      }
-      // ref 覆盖 value
-      if (p.getRef() != null) {
-        Object refObj = this.getBean(p.getRef());
-        method.invoke(obj, refObj);
-      }
-    }
-    bean2ObjectMap.put(beanId, obj);
     return obj;
   }
 }

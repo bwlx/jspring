@@ -9,17 +9,15 @@ package com.bwlx.jspring;
 public abstract class AbstractBeanProcessor implements BeanProcessor {
   private XmlBeanFactory xmlBeanFactory;
 
-  public AbstractBeanProcessor(XmlBeanFactory xmlBeanFactory) {
+  public XmlBeanFactory getXmlBeanFactory() {
+    return xmlBeanFactory;
+  }
+
+  public void setXmlBeanFactory(XmlBeanFactory xmlBeanFactory) {
     this.xmlBeanFactory = xmlBeanFactory;
   }
 
-  @Override
-  public void process(String beanId) {
-
-  }
-
-  @Override
-  public void process() {
-
+  public AbstractBeanProcessor(XmlBeanFactory xmlBeanFactory) {
+    this.xmlBeanFactory = xmlBeanFactory;
   }
 }
